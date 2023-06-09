@@ -7,6 +7,10 @@ Depends on the Sensirion SCD4x (CO2) and SEN5x (Particulate Matter) sensors, and
 
 Intended for use on an Adafruit ESP32-S2 or S3 Reverse TFT Feather, but any wifi/display enabled board on circuitpython should work with minor tweaks (display element positions).
 
+Includes the two linked libraries for Sensirion SEN5x (+ base i2c driver) in the lib folder, the remaining requirements should be installed with `circup install --auto`
+
+Install circup with `pip install circup`
+
 # Case - Laser Cut - 3D Printed one is available by same author
 ## Onshape cad link:
 https://cad.onshape.com/documents/6bc686011b7016b1f9cf4f36/w/be00425a47ebc57f8f53a4b4/e/f36a69b4b0d941c2df68cdbc
