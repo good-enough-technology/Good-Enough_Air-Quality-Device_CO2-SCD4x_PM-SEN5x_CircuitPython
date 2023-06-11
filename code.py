@@ -109,7 +109,8 @@ try:
     font = terminalio.FONT
     try:
         font = bitmap_font.load_font("Inter-Thin-30.bdf")  # Load the font file
-        font.load_glyphs(code_points='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890- ().,:!?/\\%+@~³µ°')  # pre-load glyphs for fast printing
+        font.load_glyphs(code_points='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890- ().,:!?/\\%+@~')
+        font.load_glyphs('°³µ')  # pre-load glyphs for fast printing
     except:
         pass
     label = Label.Label(font, text="Good-\n\tEnough\n.technology")
@@ -131,16 +132,16 @@ try:
         palette[p] = 0x000000
     palette.make_transparent(4)
 
-    circle = vectorio.Circle(pixel_shader=palette, radius=25, x=70, y=40)
-    circle.color_index = len(palette) - 1
+    circle = vectorio.Circle(pixel_shader=palette, radius=25, x=26, y=40)
+    circle.color_index = min(6, len(palette) - 1)
     metricGroup.append(circle)
 
-    rectangle = vectorio.Rectangle(pixel_shader=palette, width=40, height=30, x=55, y=45)
-    metricGroup.append(rectangle)
+    # rectangle = vectorio.Rectangle(pixel_shader=palette, width=40, height=30, x=55, y=45)
+    # metricGroup.append(rectangle)
 
-    points=[(0, 0), (100, 20), (20, 20), (20, 100)]
-    polygon = vectorio.Polygon(pixel_shader=palette, points=points, x=0, y=0)
-    metricGroup.append(polygon)
+    # points=[(0, 0), (100, 20), (20, 20), (20, 100)]
+    # polygon = vectorio.Polygon(pixel_shader=palette, points=points, x=0, y=0)
+    # metricGroup.append(polygon)
     
     metricGroup.append(label)
 
@@ -183,8 +184,12 @@ try:
 
     def displayMetric(metric_name, metric_value, unit):
         global metricGroup
+        global metric_display_counter
         global label
-        label.text = metric_name + ":\n" + str(metric_value) + " " + unit
+        if metric_value is None or str(metric_value).lower() is 'nan':
+            update_display()
+        else:
+            label.text = metric_name + ":\n" + str(metric_value) + " " + unit
 
     
     transparent_sprite = None
@@ -262,6 +267,7 @@ try:
                 for k in range(throttle_time):
                     print(f"Throttling data for {throttle_time} seconds")
                     time.sleep(0.5)
+                    update_display()
                     if D2.value == True:
                         print("Throttle cancelled")
                         throttle_time = 0
@@ -279,7 +285,9 @@ try:
             ban_time = float(message.split()[-2])
             print("Ban (",ban_time,"s) message received: ", message)
             print("Ban: Sleeping for ",ban_time,"s")
-            time.sleep(ban_time)
+            for i in range(int(ban_time)):
+                update_display()
+                time.sleep(1)
             print("Done sleeping due to ban")
         else:
             print("Error message received on topic (",topic,"): ", message)
@@ -315,7 +323,6 @@ try:
         doReconnectWifi()
         print("Reconnecting to Adafruit IO...")
         client.reconnect()
-
 
     # pylint: disable=unused-argument
     def message(client, feed_id, payload):
@@ -507,7 +514,8 @@ try:
                     print("SCD4x Error: ",e)
                     scd4x_errors+=1
             postToAdafruitIOAndDoThrottleWait()
-
+            time.sleep(1)
+            update_display()
             if sen5x_device:
                 try:
                     if sen5x_device.read_data_ready():
@@ -533,6 +541,7 @@ try:
                             aio_client.publish(feed_names["sen5x"]["nox"], sen5x_data.nox_index.scaled)
                             postToAdafruitIOAndDoThrottleWait()
                             channel_total += 1
+                        print("||",end=" ")
                     else:
                         print("SEN5x data not ready, fan cleaning interval: ",sen5x_device.get_fan_auto_cleaning_interval(),"s",sep="")
                 except OSError as e:
@@ -583,10 +592,10 @@ try:
         time.sleep(0.5)
         
         datapoints_per_minute = 1 if channel_total > DATA_POINTS_PER_MINUTE else DATA_POINTS_PER_MINUTE / channel_total if channel_total > 0 else 30 # wait 2 seconds at startup fpr sensors to warm up
-        print('Sleeping', (60 / datapoints_per_minute), 'seconds for', channel_total, 'datapoints')
-        sleep_time = 60 / datapoints_per_minute
+        sleep_time = int(60 / datapoints_per_minute)
         metric_seconds_counter = 0
-        for k in range(int(sleep_time)):
+        print('Sleeping', sleep_time, 'seconds for', channel_total, 'datapoints')
+        for k in range(sleep_time):
             time.sleep(1)
             metric_seconds_counter = (metric_seconds_counter + 1) % 2
             if metric_seconds_counter == 0:
