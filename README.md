@@ -10,7 +10,7 @@ Intended for use on an Adafruit ESP32-S2 or S3 Reverse TFT Feather, but any wifi
 
 Your circuitpython device should be running v8 or above, and the settings.toml file should be updated to have all the entries populated that are in this repository.
 
-Includes the two linked libraries for Sensirion SEN5x (+ base i2c driver) in the lib folder, the remaining requirements should be installed with `circup install --auto`
+Includes the two linked libraries for [Sensirion SEN5x circuitpython driver](https://github.com/good-enough-technology/CircuitPython_sensirion_i2c_sen5x) (+ [base i2c driver](https://github.com/good-enough-technology/CircuitPython_sensirion_i2c_driver)) in the lib folder, the remaining requirements should be installed with `circup install --auto`
 
 Install circup with `pip install circup`
 
