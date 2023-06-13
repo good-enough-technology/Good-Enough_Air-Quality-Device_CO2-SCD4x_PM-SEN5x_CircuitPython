@@ -154,33 +154,39 @@ try:
         if channel_total == 0:
             #TODO: Add no channels msg or display animation for connecting sensors
             return
-        metric_display_counter = (metric_display_counter + 1) % 11# channel_total
+        metric_display_counter = metric_display_counter + 1
+        if metric_display_counter > channel_total - 1 :
+            metric_display_counter = metric_display_counter % channel_total
+            if scd4x_device is None:
+                metric_display_counter += 3
+                
+             # channel_total
         # if channel_total == 8: 
         #     metric_display_counter = metric_display_counter + 3
-        if metric_display_counter == 0:
-            displayMetric("CO2", scd4x_device.CO2, "ppm")
-        elif metric_display_counter == 1:
-            displayMetric("Temp", scd4x_device.temperature, "°C")
-        elif metric_display_counter == 2:
-            displayMetric("Humidity", scd4x_device.relative_humidity, "%")
-        elif metric_display_counter == 3:
-            displayMetric("PM1", sen5x_data.mass_concentration_1p0.physical, "µg/m³")
-        elif metric_display_counter == 4:
-            displayMetric("PM2.5", sen5x_data.mass_concentration_2p5.physical, "µg/m³")
-        elif metric_display_counter == 5:
-            displayMetric("PM4", sen5x_data.mass_concentration_4p0.physical, "µg/m³")
-        elif metric_display_counter == 6:
-            displayMetric("PM10", sen5x_data.mass_concentration_10p0.physical, "µg/m³")
-        elif metric_display_counter == 7:
-            displayMetric("Temp", sen5x_data.ambient_temperature.degrees_celsius, "°C")
-        elif metric_display_counter == 8:
-            displayMetric("Humidity", sen5x_data.ambient_humidity.percent_rh, "%")
-        elif metric_display_counter == 9:
-            displayMetric("VOC", sen5x_data.voc_index.scaled, "(100~=0)")
-        elif metric_display_counter == 10:
-            displayMetric("NOx", sen5x_data.nox_index.scaled, "(1~=0)")
-        else:
-            raise Exception("Invalid metric_display_counter: ",metric_display_counter,", channel_total value: ",channel_total)
+        if scd4x_device:
+            if metric_display_counter == 0:
+                displayMetric("CO2", scd4x_device.CO2, "ppm")
+            elif metric_display_counter == 1:
+                displayMetric("Temp", scd4x_device.temperature, "°C")
+            elif metric_display_counter == 2:
+                displayMetric("Humidity", scd4x_device.relative_humidity, "%")
+        if sen5x_device:
+            if metric_display_counter == 3:
+                displayMetric("PM1", sen5x_data.mass_concentration_1p0.physical, "µg/m³")
+            elif metric_display_counter == 4:
+                displayMetric("PM2.5", sen5x_data.mass_concentration_2p5.physical, "µg/m³")
+            elif metric_display_counter == 5:
+                displayMetric("PM4", sen5x_data.mass_concentration_4p0.physical, "µg/m³")
+            elif metric_display_counter == 6:
+                displayMetric("PM10", sen5x_data.mass_concentration_10p0.physical, "µg/m³")
+            elif metric_display_counter == 7:
+                displayMetric("Temp", sen5x_data.ambient_temperature.degrees_celsius, "°C")
+            elif metric_display_counter == 8:
+                displayMetric("Humidity", sen5x_data.ambient_humidity.percent_rh, "%")
+            elif metric_display_counter == 9:
+                displayMetric("VOC", sen5x_data.voc_index.scaled, "(100~=0)")
+            elif metric_display_counter == 10:
+                displayMetric("NOx", sen5x_data.nox_index.scaled, "(1~=0)")
 
     def displayMetric(metric_name, metric_value, unit):
         global metricGroup
@@ -433,6 +439,14 @@ try:
             time.sleep(1)
             print(f"Serial #{scd4x_device.serial_number}")
             print("Attempting to take first reading after starting measurements")
+            scd4x_device.self_calibration_enabled = False
+            ## use openapi for elevation using config lat/long, which is also used for data feeds if present, allows detecting worse air outside.
+            # See Particulate Matter API https://app.noteable.io/f/8453150c-f579-4298-a9dc-390789ebc17d/OpenAQ_API_Bristol_AirQuality.ipynb
+            # And Open Elevation API https://app.noteable.io/f/0beef108-1273-4deb-bd81-937b948eb449/Elevation-APIs.ipynb
+            scd4x_device.altitude = 38 # move to config file
+            # scd4x_device.temperature_offset = 0
+            scd4x_device.persist_settings()
+
             scd4x_device.start_periodic_measurement()
             time.sleep(1)
             if scd4x_device.data_ready:
@@ -556,7 +570,7 @@ try:
             microcontroller.reset()
 
         # If we've had 5 errors in a row, reboot
-        if scd4x_errors >= MAX_SENSOR_ERRORS_BEFORE_REBOOT or sen5x_errors >= MAX_SENSOR_ERRORS_BEFORE_REBOOT:
+        if (scd4x_device and scd4x_errors >= MAX_SENSOR_ERRORS_BEFORE_REBOOT) or (sen5x_device and sen5x_errors >= MAX_SENSOR_ERRORS_BEFORE_REBOOT):
             print("Too many sensor errors, scd:",scd4x_errors," sen:",sen5x_errors,", rebooting...")
             time.sleep(1.5)
             raise Exception("Too many sensor errors, scd4x:",scd4x_errors," sen5x:",sen5x_errors,", rebooting...")
