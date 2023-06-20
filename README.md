@@ -26,6 +26,7 @@ Install circup with `pip install circup`
 - TEST: Check free diskspace on boot, trim boot/safemode/errors.json - Deletes all but X entries
 - Post errors to adafruit io during normal operation and mark posted. Then when diskspace clearing, kill off successfully posted events from json files. If offline, delete all but last 10 entries of each (configurable from settings.toml, default to 10 if missing, set at 30 in file).
 - Turn off Automatic Baseline Calibration for CO2, pre-tune all sensors, allow turning on via config, but with manual reset and config change required. Idea is to connect external powersource, connect over wifi and turn on in settings.toml, reboot, leave running with ABC enabled in fresh air for over 24hrs, then turn off over wifi via settings.toml and reboot. Not sure auto calibration is saved automatically, and not lost by sudden reboot, so check. Should be fine if factory_reset never called.
+- Update time period for VOC algorithm to 720hours, to accomodate building standards. See https://sensirion.com/media/documents/4B4D0E67/6436C169/GAS_AN_SGP4x_BuildingStandards_D1.pdf
 
 ## Case - Laser Cut - 3D Printed one is available by same author
 ### Onshape cad link:
