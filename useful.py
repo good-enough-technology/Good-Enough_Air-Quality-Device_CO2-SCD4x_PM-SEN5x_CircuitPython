@@ -34,18 +34,18 @@ def ensure_free_space(file, data):
         # check for 4x the space needed, MAX_ENTRIES * (errors/boot/safemode.json & code)
         if free_space < data_size * MAX_ENTRIES and get_total_space() > data_size * MAX_ENTRIES * 4:
             print("Keeping {} entries in file {}".format(MAX_ENTRIES,file))
-            fHandle = os.open(file, os.O_RDWR)
-            fStats = os.fstat(fHandle)
-            os.close(fHandle)
-            if(fStats.st_size > data * 10):
+
+            fStats = os.stat(file)
+            st_mode,st_ino,st_dev,st_nlink,st_uid,st_gid,st_size,st_atime,st_mtime,st_ctime=fStats
+            if(st_size > data_size * MAX_ENTRIES):
                 # read in 10 lines, the lines are not consistent length, then read the next ten lines into another variable until the end of the file is reached, then use the last 10 lines from the two combined sets of lines (11 minimum, 20 maximum lines). Write this over the original filename
                 storage.remount("/", False)  # writeable by CircuitPython
                 lines = []
                 with open(file, "r") as fp:
                     old_lines = lines
-                    lines = fp.readlines(10)
-                    if len(lines) < 10:
-                        lines = old_lines[-(10-len(lines)):] + lines
+                    lines = fp.readlines(MAX_ENTRIES)
+                    if len(lines) < MAX_ENTRIES:
+                        lines = old_lines[-(MAX_ENTRIES-len(lines)):] + lines
                     fp.close()
                 with open(file, "w") as fp:
                     fp.writelines(lines)
@@ -53,7 +53,7 @@ def ensure_free_space(file, data):
                     fp.close()
                 print(".")
         else:
-            print("Not enough space to save 30 entries for each log file, removing {}".format(file))
+            print("Not enough space to save all entries for each log file, removing {}".format(file))
             os.remove(file)
 
         
@@ -62,11 +62,17 @@ def precode_file_write(file, data):
     try:
         ensure_free_space(file, data)
     except Exception as e:
-        print("Error ensuring free space:", e)
-    with open(file, "a+") as fp:
-        fp.write(f"{data}\n")
-        fp.flush()
-    storage.remount("/", True)   # writeable by USB host
+        print("Error ensuring free space:")
+        print(e)
+        time.sleep(3)
+    try:
+        with open(file, "a+") as fp:
+            fp.write(f"{data}\n")
+            fp.flush()
+    except:
+        print("Error writing to file")
+    finally:
+        storage.remount("/", True)   # writeable by USB host
 
 
 def update_restart_dict_time(things_dict):
@@ -76,3 +82,11 @@ def update_restart_dict_time(things_dict):
 def update_restart_dict_traceback(things_dict):
     things_dict["traceback"] = supervisor.get_previous_traceback()
     return things_dict
+
+
+
+
+
+
+
+
