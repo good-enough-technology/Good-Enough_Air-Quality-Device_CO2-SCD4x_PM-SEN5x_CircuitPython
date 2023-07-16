@@ -1126,7 +1126,8 @@ class Sen5xI2cCmdGetVersion(Sen5xI2cCmdBase):
         # convert raw received data into proper data types
         firmware_major = int(unpack(">B", checked_data[0:1])[0])  # uint8
         firmware_minor = int(unpack(">B", checked_data[1:2])[0])  # uint8
-        firmware_debug = bool(unpack(">?", checked_data[2:3])[0])  # bool
+        firmware_debug = bool(checked_data[2])  # bool
+        #firmware_debug = bool(unpack(">?", checked_data[2:3])[0])  # bool
         hardware_major = int(unpack(">B", checked_data[3:4])[0])  # uint8
         hardware_minor = int(unpack(">B", checked_data[4:5])[0])  # uint8
         protocol_major = int(unpack(">B", checked_data[5:6])[0])  # uint8
